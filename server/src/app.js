@@ -1,4 +1,4 @@
-﻿const express = require("express");
+const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -37,6 +37,7 @@ const corsOptions = {
 const app = express();
 
 app.disable("x-powered-by");
+app.set("trust proxy", 1);
 app.use(attachRequestContext);
 app.use(securityHeaders);
 app.use(cors(corsOptions));

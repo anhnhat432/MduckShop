@@ -161,3 +161,64 @@ mongosh "mongodb://127.0.0.1:27017/website-shoe" --eval "db.users.updateOne({ em
 - [client/package.json](/e:/Workspace/WebsiteShoe/client/package.json)
 - [client/.env.example](/e:/Workspace/WebsiteShoe/client/.env.example)
 - [client/src/main.jsx](/e:/Workspace/WebsiteShoe/client/src/main.jsx)
+
+## Deploy đơn giản nhất
+
+Nếu muốn ít cấu hình nhất, hãy deploy theo cách này:
+
+- `client/` lên Vercel
+- `server/` lên Render
+- database dùng MongoDB Atlas
+
+### Frontend trên Vercel
+
+1. Vào Vercel và import repo GitHub này.
+2. Khi tạo project, chọn `Root Directory` là `client`.
+3. Thêm biến môi trường:
+
+```env
+VITE_API_URL=https://<render-backend-domain>/api
+```
+
+4. Deploy project.
+
+Lưu ý:
+
+- Repo đã có [client/vercel.json](/e:/Workspace/WebsiteShoe/client/vercel.json) để rewrite tất cả route SPA về `index.html`, nên các đường dẫn như `/products`, `/cart`, `/shipping` sẽ không bị 404 khi refresh trên Vercel.
+
+### Backend trên Render
+
+1. Vào Render và tạo `Web Service` mới từ repo GitHub này.
+2. Chọn `Root Directory` là `server`.
+3. Có thể dùng file [render.yaml](/e:/Workspace/WebsiteShoe/render.yaml) ở root repo để Render tự đọc cấu hình build/start cơ bản.
+4. Khai báo các biến môi trường:
+
+```env
+NODE_ENV=production
+PORT=10000
+MONGODB_URI=<mongodb-atlas-uri>
+JWT_SECRET=<secret-mạnh>
+JWT_EXPIRES_IN=30d
+CLIENT_URL=https://<vercel-frontend-domain>
+SERVER_PUBLIC_URL=https://<render-backend-domain>
+```
+
+5. Sau khi deploy xong, kiểm tra health check:
+
+```text
+https://<render-backend-domain>/api/health
+```
+
+### Thứ tự nên làm
+
+1. Deploy backend lên Render trước.
+2. Lấy domain backend và gán vào `VITE_API_URL` của frontend trên Vercel.
+3. Deploy frontend lên Vercel.
+4. Lấy domain frontend và cập nhật lại `CLIENT_URL` trên Render.
+5. Redeploy backend một lần nữa để CORS khớp domain thật.
+
+### Lưu ý production
+
+- Nên dùng MongoDB Atlas thay vì Mongo local.
+- [server/src/app.js](/e:/Workspace/WebsiteShoe/server/src/app.js) đã bật `trust proxy` để backend chạy đúng sau proxy của Render.
+- Chức năng upload ảnh hiện đang lưu file local trong `server/uploads/`. Cách này phù hợp để demo, nhưng nếu đi production thật thì nên chuyển sang Cloudinary, S3 hoặc Vercel Blob.
